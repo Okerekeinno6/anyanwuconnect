@@ -1,0 +1,14 @@
+# Route all requests through Passenger WSGI
+PassengerEnabled On
+PassengerAppRoot /home/yourusername/anyanwu-api
+PassengerPython /home/yourusername/virtualenv/anyanwu-api/3.11/bin/python3
+
+# Security headers
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Cache static assets
+<FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$">
+    Header set Cache-Control "max-age=604800, public"
+</FilesMatch>
