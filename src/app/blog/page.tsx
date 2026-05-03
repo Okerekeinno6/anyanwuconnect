@@ -20,7 +20,14 @@ export const dynamic = 'force-dynamic';
 export default async function BlogPage() {
   let posts = blogPosts; // Fallback static data
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { cache: 'no-store' });
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+    const res = await fetch(`${apiUrl}/api/blogs`, { 
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+      }
+    });
     if (res.ok) {
       const data = await res.json();
       if (data && data.length > 0) {

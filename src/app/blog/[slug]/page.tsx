@@ -13,7 +13,10 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   let post = getPostBySlug(slug); // fallback
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`);
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+    const res = await fetch(`${apiUrl}/api/blogs/${slug}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+    });
     if (res.ok) post = await res.json();
   } catch (e) {}
   
@@ -38,10 +41,16 @@ export default async function BlogPostPage({ params }: Props) {
   let related = blogPosts.filter(p => p.slug !== slug).slice(0, 2);
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`, { cache: 'no-store' });
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json'
+    };
+
+    const res = await fetch(`${apiUrl}/api/blogs/${slug}`, { cache: 'no-store', headers });
     if (res.ok) post = await res.json();
 
-    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { cache: 'no-store' });
+    const allRes = await fetch(`${apiUrl}/api/blogs`, { cache: 'no-store', headers });
     if (allRes.ok) {
       const allPosts: any[] = await allRes.json();
       related = allPosts.filter(p => p.slug !== slug).slice(0, 2);
