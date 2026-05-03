@@ -76,7 +76,7 @@ export default function Footer() {
           <div className={styles.contactInfo}>
             <p>🇳🇬 Nigeria, West Africa</p>
             <p>
-              <a href="mailto:info@anyanwuconnect.org">info@anyanwuconnect.org</a>
+              <a href="mailto:info@anyanwuconnect.com">info@anyanwuconnect.com</a>
             </p>
           </div>
         </div>

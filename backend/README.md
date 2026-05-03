@@ -55,7 +55,7 @@ Fill in:
 - `SECRET_KEY` — a long random string (generate with `python -c "import secrets; print(secrets.token_hex(32))"`)
 - `ADMIN_USERNAME` — your admin username
 - `ADMIN_PASSWORD` — your secure password
-- `FRONTEND_URL` — your Next.js site URL (e.g. `https://anyanwuconnect.org`)
+- `FRONTEND_URL` — your Next.js site URL (e.g. `https://anyanwuconnect.com`)
 
 ### Step 5: Initialise the Database
 
