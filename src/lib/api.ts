@@ -133,3 +133,26 @@ export async function apiUpdateBlog(id: number, post: Partial<ApiBlogPost>): Pro
 export async function apiDeleteBlog(id: number): Promise<void> {
   await apiFetch(`/api/blogs/${id}`, { method: "DELETE" });
 }
+
+export async function apiUploadImage(file: File): Promise<string> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  
+  // Notice we use raw fetch instead of apiFetch because we don't want "Content-Type": "application/json"
+  // The browser will automatically set the correct multipart/form-data boundary
+  const res = await fetch(`${API_URL}/api/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || "Image upload failed");
+  }
+  return data.url;
+}

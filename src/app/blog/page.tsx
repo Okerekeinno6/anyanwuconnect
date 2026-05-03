@@ -15,9 +15,28 @@ const categoryColors: Record<string, string> = {
   'Technology & Education': '#7C3AED',
 };
 
-export default function BlogPage() {
-  const featured = blogPosts[0];
-  const rest = blogPosts.slice(1);
+export default async function BlogPage() {
+  let posts = blogPosts; // Fallback static data
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, {
+      next: { revalidate: 60 }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.length > 0) {
+        posts = data;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to fetch dynamic blogs", e);
+  }
+
+  const featured = posts[0];
+  const rest = posts.slice(1);
+
+  if (!featured) {
+    return <section className="section"><div className="container">No blog posts found.</div></section>;
+  }
 
   return (
     <>

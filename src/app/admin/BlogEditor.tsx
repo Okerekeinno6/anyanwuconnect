@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import {
-  apiCreateBlog, apiUpdateBlog, apiDeleteBlog, type ApiBlogPost,
+  apiCreateBlog, apiUpdateBlog, apiDeleteBlog, apiUploadImage, type ApiBlogPost,
 } from "@/lib/api";
 import styles from "./admin.module.css";
 import { Field } from "./ContentEditor";
@@ -30,6 +30,7 @@ export default function BlogEditor({
   const [saving, setSaving]   = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [view, setView]       = useState<"list" | "edit">("list");
+  const [uploading, setUploading] = useState(false);
 
   function openNew() {
     setEditing({ ...EMPTY_POST });
@@ -135,8 +136,41 @@ export default function BlogEditor({
             <Field label="Excerpt (shown on listing page)" value={editing.excerpt || ""}
               onChange={(v) => setField("excerpt", v)} multiline rows={3} />
 
-            <Field label="Cover Image URL" value={editing.coverImage || ""}
-              onChange={(v) => setField("coverImage", v)} />
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Cover Image (Upload or URL)</label>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ flex: 1, padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!backendOk) { showToast("⚠ API required to upload images"); return; }
+                    setUploading(true);
+                    try {
+                      const url = await apiUploadImage(file);
+                      setField("coverImage", url);
+                      showToast("Image uploaded!");
+                    } catch (err: any) {
+                      showToast(`Upload failed: ${err.message}`);
+                    } finally {
+                      setUploading(false);
+                      e.target.value = ''; // Reset input
+                    }
+                  }}
+                />
+                {uploading && <span style={{ alignSelf: 'center' }}>Uploading...</span>}
+              </div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                placeholder="Or paste an image URL directly..."
+                value={editing.coverImage || ""}
+                onChange={(e) => setField("coverImage", e.target.value)}
+              />
+            </div>
 
             {editing.coverImage && (
               <img src={editing.coverImage} alt="Cover preview"

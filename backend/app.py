@@ -11,12 +11,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import jwt
 import bcrypt
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -29,11 +30,15 @@ CORS(app, resources={r"/api/*": {"origins": os.getenv("FRONTEND_URL", "*")}},
 
 # ── Config ─────────────────────────────────────────────────────
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'anyanwu.db')}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-me-in-production-!!!")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", 24))
 
 db = SQLAlchemy(app)
@@ -172,6 +177,38 @@ def login():
 @require_auth
 def verify_token():
     return jsonify({"valid": True, "admin_id": g.admin_id}), 200
+
+
+# ════════════════════════════════════════════════════════════════
+# ROUTES — UPLOADS
+# ════════════════════════════════════════════════════════════════
+
+@app.route("/api/upload", methods=["POST"])
+@require_auth
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
+        
+    if file:
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(filepath)
+        
+        # Build the public URL (ensure it uses https in production if behind proxy, but request.host_url works fine usually)
+        # We will use hardcoded FRONTEND_URL or rely on request.host_url
+        scheme = "https" if "anyanwuconnect.com" in request.host_url else request.scheme
+        host = request.host
+        url = f"{scheme}://{host}/uploads/{filename}"
+        return jsonify({"url": url}), 201
+
+@app.route("/uploads/<filename>")
+def serve_upload(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 # ════════════════════════════════════════════════════════════════

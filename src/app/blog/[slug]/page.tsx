@@ -13,7 +13,12 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  let post = getPostBySlug(slug); // fallback
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`);
+    if (res.ok) post = await res.json();
+  } catch (e) {}
+  
   if (!post) return {};
   return {
     title: `${post.title} | AnyanwuConnect`,
@@ -30,10 +35,26 @@ const categoryColors: Record<string, string> = {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  
+  let post = getPostBySlug(slug);
+  let related = blogPosts.filter(p => p.slug !== slug).slice(0, 2);
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`, { next: { revalidate: 60 }});
+    if (res.ok) post = await res.json();
+
+    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { next: { revalidate: 60 }});
+    if (allRes.ok) {
+      const allPosts: any[] = await allRes.json();
+      related = allPosts.filter(p => p.slug !== slug).slice(0, 2);
+    }
+  } catch (e) {
+    console.error("Failed to fetch dynamic single post", e);
+  }
+
   if (!post) notFound();
 
-  const related = blogPosts.filter(p => p.slug !== post.slug).slice(0, 2);
+
 
   return (
     <>
