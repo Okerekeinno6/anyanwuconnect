@@ -15,12 +15,12 @@ const categoryColors: Record<string, string> = {
   'Technology & Education': '#7C3AED',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function BlogPage() {
   let posts = blogPosts; // Fallback static data
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, {
-      next: { revalidate: 60 }
-    });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data && data.length > 0) {

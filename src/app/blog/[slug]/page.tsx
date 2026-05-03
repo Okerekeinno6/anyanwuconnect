@@ -7,9 +7,7 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return getAllSlugs().map(slug => ({ slug }));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -40,10 +38,10 @@ export default async function BlogPostPage({ params }: Props) {
   let related = blogPosts.filter(p => p.slug !== slug).slice(0, 2);
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`, { next: { revalidate: 60 }});
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/${slug}`, { cache: 'no-store' });
     if (res.ok) post = await res.json();
 
-    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { next: { revalidate: 60 }});
+    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs`, { cache: 'no-store' });
     if (allRes.ok) {
       const allPosts: any[] = await allRes.json();
       related = allPosts.filter(p => p.slug !== slug).slice(0, 2);
