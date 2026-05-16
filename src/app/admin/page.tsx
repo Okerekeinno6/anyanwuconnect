@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import {
   apiLogin, apiVerifyToken, clearToken, apiGetContent, apiSaveContent,
   apiGetBlogs, apiCreateBlog, apiUpdateBlog, apiDeleteBlog,
-  isBackendConfigured, type ApiBlogPost,
+  apiGetMessages, apiMarkMessageRead, apiDeleteMessage,
+  isBackendConfigured, type ApiBlogPost, type ContactMessage,
 } from "@/lib/api";
 import {
   getSiteContent, saveSiteContent, resetSiteContent,
@@ -15,7 +16,7 @@ import styles from "./admin.module.css";
 import ContentEditor from "./ContentEditor";
 import BlogEditor from "./BlogEditor";
 
-type Tab = "content" | "blog";
+type Tab = "content" | "blog" | "messages";
 
 export default function AdminPage() {
   const [authed, setAuthed]         = useState(false);
@@ -27,7 +28,9 @@ export default function AdminPage() {
   const [toast, setToast]           = useState("");
   const [backendOk, setBackendOk]   = useState(false);
 
-  // Content state
+  // Messages state
+  const [messages, setMessages]         = useState<ContactMessage[]>([]);
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
   const [content, setContent]       = useState<SiteContent>(defaultContent);
 
   // Blog state
@@ -81,7 +84,15 @@ export default function AdminPage() {
   // ── Login ─────────────────────────────────────────────────────
   async function handleLogin() {
     setLoginErr("");
-    if (!username || !password) { setLoginErr("Enter username and password."); return; }
+    // In offline mode the username field is hidden, so only require password
+    if (isBackendConfigured() && (!username || !password)) {
+      setLoginErr("Enter username and password.");
+      return;
+    }
+    if (!isBackendConfigured() && !password) {
+      setLoginErr("Enter the admin password.");
+      return;
+    }
 
     if (isBackendConfigured()) {
       try {
@@ -133,6 +144,40 @@ export default function AdminPage() {
   function switchTab(tab: Tab) {
     setActiveTab(tab);
     if (tab === "blog") loadBlogs();
+    if (tab === "messages") loadMessages();
+  }
+
+  const loadMessages = useCallback(async () => {
+    if (messagesLoaded) return;
+    try {
+      if (isBackendConfigured()) {
+        const data = await apiGetMessages();
+        setMessages(data);
+      }
+      setMessagesLoaded(true);
+    } catch {
+      showToast("Could not load messages from server.");
+    }
+  }, [messagesLoaded]);
+
+  async function handleMarkRead(id: number) {
+    try {
+      await apiMarkMessageRead(id);
+      setMessages((prev) => prev.map((m) => m.id === id ? { ...m, read: true } : m));
+    } catch {
+      showToast("Could not mark message as read.");
+    }
+  }
+
+  async function handleDeleteMessage(id: number) {
+    if (!confirm("Delete this message?")) return;
+    try {
+      await apiDeleteMessage(id);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      showToast("Message deleted.");
+    } catch {
+      showToast("Could not delete message.");
+    }
   }
 
   if (loading) {
@@ -223,6 +268,21 @@ export default function AdminPage() {
         >
           📰 Blog Posts
         </button>
+        <button
+          className={`${styles.tab} ${activeTab === "messages" ? styles.tabActive : ""}`}
+          onClick={() => switchTab("messages")}
+        >
+          ✉️ Messages
+          {messages.filter((m) => !m.read).length > 0 && (
+            <span style={{
+              marginLeft: "0.5rem", background: "var(--accent-emerald)",
+              color: "#fff", borderRadius: "999px", padding: "0.1rem 0.5rem",
+              fontSize: "0.75rem", fontWeight: 700,
+            }}>
+              {messages.filter((m) => !m.read).length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Body */}
@@ -237,6 +297,70 @@ export default function AdminPage() {
             showToast={showToast}
             backendOk={backendOk}
           />
+        )}
+        {activeTab === "messages" && (
+          <div style={{ maxWidth: "800px" }}>
+            <h2 style={{ marginBottom: "1.5rem", color: "var(--primary-navy)" }}>
+              Contact Messages
+              {messages.filter((m) => !m.read).length > 0 && (
+                <span style={{ marginLeft: "0.75rem", fontSize: "1rem", color: "var(--accent-emerald)", fontWeight: 600 }}>
+                  {messages.filter((m) => !m.read).length} unread
+                </span>
+              )}
+            </h2>
+            {messages.length === 0 ? (
+              <div className="card" style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
+                No messages yet. When visitors submit the contact form, they will appear here.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {messages.map((msg) => (
+                  <div key={msg.id} className="card" style={{
+                    borderLeft: msg.read ? "4px solid var(--surface-border)" : "4px solid var(--accent-emerald)",
+                    opacity: msg.read ? 0.8 : 1,
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                      <div>
+                        <strong style={{ color: "var(--primary-navy)", fontSize: "1rem" }}>{msg.name}</strong>
+                        {!msg.read && (
+                          <span style={{ marginLeft: "0.5rem", background: "var(--accent-emerald)", color: "#fff", borderRadius: "999px", padding: "0.1rem 0.5rem", fontSize: "0.7rem", fontWeight: 700 }}>
+                            NEW
+                          </span>
+                        )}
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: "0.2rem 0 0" }}>
+                          <a href={`mailto:${msg.email}`} style={{ color: "var(--accent-emerald)" }}>{msg.email}</a>
+                          {" · "}{msg.subject}{" · "}{msg.date}
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        {!msg.read && (
+                          <button
+                            onClick={() => handleMarkRead(msg.id)}
+                            style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem", borderRadius: "0.4rem", border: "1px solid var(--accent-emerald)", background: "transparent", color: "var(--accent-emerald)", cursor: "pointer" }}
+                          >
+                            Mark Read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem", borderRadius: "0.4rem", border: "1px solid #ef4444", background: "transparent", color: "#ef4444", cursor: "pointer" }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <p style={{ color: "var(--foreground)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{msg.message}</p>
+                    <a
+                      href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                      style={{ display: "inline-block", marginTop: "0.75rem", fontSize: "0.85rem", color: "var(--accent-emerald)", fontWeight: 600 }}
+                    >
+                      Reply via Email →
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

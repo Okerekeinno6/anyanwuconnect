@@ -156,3 +156,42 @@ export async function apiUploadImage(file: File): Promise<string> {
   }
   return data.url;
 }
+
+// ════════════════════════════════════════════════════════════════
+// CONTACT MESSAGES
+// ════════════════════════════════════════════════════════════════
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  date: string;
+  createdAt: string;
+}
+
+export async function apiSubmitContact(data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<void> {
+  await apiFetch("/api/contact", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiGetMessages(): Promise<ContactMessage[]> {
+  return apiFetch<ContactMessage[]>("/api/contact");
+}
+
+export async function apiMarkMessageRead(id: number): Promise<void> {
+  await apiFetch(`/api/contact/${id}/read`, { method: "PATCH" });
+}
+
+export async function apiDeleteMessage(id: number): Promise<void> {
+  await apiFetch(`/api/contact/${id}`, { method: "DELETE" });
+}
