@@ -142,6 +142,46 @@ export interface SiteContent {
       cta: string;
     };
   };
+
+  // ── CONTACT PAGE ──────────────────────────────────────────────
+  contact: {
+    hero: { title: string; subtitle: string; };
+    info: {
+      hqTitle: string;
+      hqAddress: string;
+      emailLabel: string;
+      emailAddress: string;
+      phoneLabel: string;
+      phoneNumber: string;
+      programmesLabel: string;
+      programmesLink: string;
+      programmesText: string;
+    };
+  };
+
+  // ── IMPACT PAGE ───────────────────────────────────────────────
+  impact: {
+    hero: { title: string; subtitle: string; };
+    research: {
+      title: string;
+      items: { title: string; date: string; buttonText: string; url: string; }[];
+    };
+    news: {
+      title: string;
+      items: { title: string; excerpt: string; }[];
+    };
+  };
+
+  // ── PILLARS PAGE ──────────────────────────────────────────────
+  pillarsPage: {
+    hero: { title: string; subtitle: string; };
+    pillarsList: { id: string; title: string; description: string; }[];
+    projects: {
+      title: string;
+      subtitle: string;
+      items: { title: string; description: string; linkText: string; linkUrl: string; }[];
+    };
+  };
 }
 
 // ── DEFAULT CONTENT ───────────────────────────────────────────────
@@ -518,6 +558,142 @@ export const defaultContent: SiteContent = {
       subtitle:
         "Join AnyanwuConnect as a partner, donor, or volunteer and become part of Africa's most ambitious development movement.",
       cta: "Partner With Us →",
+    },
+  },
+
+  // ── CONTACT ───────────────────────────────────────────────────
+  contact: {
+    hero: {
+      title: "Contact & Partner With Us",
+      subtitle: "Reach out to AnyanwuConnect for partnerships, inquiries, or media requests.",
+    },
+    info: {
+      hqTitle: "Abuja Office",
+      hqAddress: "AnyanwuConnect Development Hub\nFederal Capital Territory,\nAbuja, Nigeria",
+      emailLabel: "Email",
+      emailAddress: "info@anyanwuconnect.com",
+      phoneLabel: "Phone",
+      phoneNumber: "Available upon request",
+      programmesLabel: "Programmes",
+      programmesText: "llworldwide.org",
+      programmesLink: "https://llworldwide.org",
+    },
+  },
+
+  // ── IMPACT ────────────────────────────────────────────────────
+  impact: {
+    hero: {
+      title: "Our Impact",
+      subtitle: "Think-Tank Resource Library & Latest Updates",
+    },
+    research: {
+      title: "Research & White Papers",
+      items: [
+        {
+          title: "The Future of Civil Intelligence in Nigeria",
+          date: "Published: Q1 2026",
+          buttonText: "Download PDF",
+          url: "#",
+        },
+        {
+          title: "Agribusiness Resiliency Report",
+          date: "Published: Q4 2025",
+          buttonText: "Download PDF",
+          url: "#",
+        },
+      ],
+    },
+    news: {
+      title: "Recent News",
+      items: [
+        {
+          title: "Launch of SecuraNG Beta",
+          excerpt: "AnyanwuConnect successfully rolls out the first phase of the SecuraNG platform in key pilot states.",
+        },
+        {
+          title: "Launching Leaders Cohort 3",
+          excerpt: "Welcoming 500 new young professionals into our intensive mentorship ecosystem.",
+        },
+      ],
+    },
+  },
+
+  // ── PILLARS PAGE ──────────────────────────────────────────────
+  pillarsPage: {
+    hero: {
+      title: "Our Pillars",
+      subtitle: "The 2026–2029 Strategy Framework",
+    },
+    pillarsList: [
+      {
+        id: "security",
+        title: "Security & Intelligence",
+        description: "SecuraNG: Our flagship platform for civil intelligence and community safety. We leverage advanced data analytics and community reporting to mitigate risks and foster a secure environment for national development.",
+      },
+      {
+        id: "leadership",
+        title: "Leadership Development",
+        description: "Launching Leaders Initiative: Mentoring the next generation of ethical, visionary Nigerian leaders. We provide comprehensive training, networking, and mentorship to young professionals, preparing them to take on critical roles in public and private sectors.",
+      },
+      {
+        id: "economic",
+        title: "Economic Empowerment",
+        description: "Agribusiness & Digital Support: Revolutionizing agribusiness practices to ensure food security. Concurrently, we provide high-impact digital branding and technology support for local SMEs, integrating them into the global economy.",
+      },
+    ],
+    projects: {
+      title: "Projects Powered by CSCI AFRICA",
+      subtitle: "AnyanwuConnect is powering multiple transformative initiatives across the continent in partnership with CSCI AFRICA. We celebrate over 50 recorded live testimonies from CSCI AFRICA alumni!",
+      items: [
+        {
+          title: "1. Launching Leaders Worldwide",
+          description: "All CSCI members are Alumni of this community in Africa. A completely free 12-week intensive course.",
+          linkText: "Visit llworldwide.org (USA)",
+          linkUrl: "https://llworldwide.org",
+        },
+        {
+          title: "2. Interweave Solutions",
+          description: "Promoting the Self-Reliance & Cooperative Model to build sustainable local economies. (USA)",
+          linkText: "",
+          linkUrl: "",
+        },
+        {
+          title: "3. Leading Through Institute (LTI)",
+          description: "Serving as the Official Leadership Mentor of the company to foster ethical leadership. (USA)",
+          linkText: "",
+          linkUrl: "",
+        },
+        {
+          title: "4. Studyflares",
+          description: "An AI-powered machine learning platform creating Study Guide Concepts, flashcards, quizzes, and game fictions for schools.",
+          linkText: "Visit studyflares.com",
+          linkUrl: "https://www.studyflares.com",
+        },
+        {
+          title: "5. FS Initiative",
+          description: "Farmers Support group dedicated to the promotion of organic seeds across Africa and Asia. (UK)",
+          linkText: "",
+          linkUrl: "",
+        },
+        {
+          title: "6. Umunnabuike Initiative",
+          description: "Located in Alaigbo, advocating for Igbo Pan AFRICA and regional solidarity.",
+          linkText: "",
+          linkUrl: "",
+        },
+        {
+          title: "7. SecuraNG",
+          description: "Our definitive solution to address and correct the security impasse across Africa.",
+          linkText: "",
+          linkUrl: "",
+        },
+        {
+          title: "8. RADIUS",
+          description: "A powerful content platform for African development, advertised seamlessly within our ecosystem.",
+          linkText: "",
+          linkUrl: "",
+        },
+      ],
     },
   },
 };

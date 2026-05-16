@@ -1,6 +1,63 @@
 "use client";
+import { useRef } from "react";
 import { type SiteContent } from "@/lib/siteContent";
+import { apiUploadImage, isBackendConfigured } from "@/lib/api";
 import styles from "./admin.module.css";
+
+// ── Image upload field ─────────────────────────────────────────
+export function ImageField({
+  label, value, onChange,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!isBackendConfigured()) {
+      alert("Backend not configured. Please set NEXT_PUBLIC_API_URL.");
+      return;
+    }
+    try {
+      const url = await apiUploadImage(file);
+      onChange(url);
+    } catch (err: unknown) {
+      alert("Upload failed: " + (err as Error).message);
+    }
+    // reset so same file can be re-selected
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div className={styles.field}>
+      <label className={styles.fieldLabel}>{label}</label>
+      <div className={styles.imageFieldRow}>
+        {value && (
+          <img src={value} alt="preview" className={styles.imagePreview} />
+        )}
+        <div className={styles.imageFieldInputs}>
+          <input
+            className={styles.fieldInput}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Paste URL or upload below"
+          />
+          <label className={styles.uploadBtn}>
+            📁 Upload New Image
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Shared helpers ─────────────────────────────────────────────
 export function Field({
@@ -101,7 +158,7 @@ export default function ContentEditor({
             <ArrayCard key={i} header={`Pillar ${i+1}: ${p.title}`}>
               <Field label="Title" value={p.title} onChange={(v) => set((d) => { d.pillarsSection.pillars[i].title = v; })} />
               <Field label="Description" value={p.description} onChange={(v) => set((d) => { d.pillarsSection.pillars[i].description = v; })} multiline rows={3} />
-              <Field label="Image URL" value={p.image} onChange={(v) => set((d) => { d.pillarsSection.pillars[i].image = v; })} />
+              <ImageField label="Image" value={p.image} onChange={(v) => set((d) => { d.pillarsSection.pillars[i].image = v; })} />
               <Field label="Link" value={p.href} onChange={(v) => set((d) => { d.pillarsSection.pillars[i].href = v; })} />
             </ArrayCard>
           ))}
@@ -116,7 +173,7 @@ export default function ContentEditor({
             <ArrayCard key={i} header={`Partner ${i+1}: ${p.name}`}>
               <Field label="Name" value={p.name} onChange={(v) => set((d) => { d.partnersSection.partners[i].name = v; })} />
               <Field label="Description" value={p.description} onChange={(v) => set((d) => { d.partnersSection.partners[i].description = v; })} multiline rows={2} />
-              <Field label="Logo URL" value={p.logo} onChange={(v) => set((d) => { d.partnersSection.partners[i].logo = v; })} />
+              <ImageField label="Logo" value={p.logo} onChange={(v) => set((d) => { d.partnersSection.partners[i].logo = v; })} />
             </ArrayCard>
           ))}
         </Section>
@@ -145,7 +202,7 @@ export default function ContentEditor({
               <Field label="Name" value={t.name} onChange={(v) => set((d) => { d.testimonialsSection.testimonials[i].name = v; })} />
               <Field label="Role" value={t.role} onChange={(v) => set((d) => { d.testimonialsSection.testimonials[i].role = v; })} />
               <Field label="Quote" value={t.quote} onChange={(v) => set((d) => { d.testimonialsSection.testimonials[i].quote = v; })} multiline rows={4} />
-              <Field label="Avatar URL" value={t.avatar} onChange={(v) => set((d) => { d.testimonialsSection.testimonials[i].avatar = v; })} />
+              <ImageField label="Avatar" value={t.avatar} onChange={(v) => set((d) => { d.testimonialsSection.testimonials[i].avatar = v; })} />
             </ArrayCard>
           ))}
         </Section>
@@ -222,7 +279,7 @@ export default function ContentEditor({
               <Field label="Name" value={m.name} onChange={(v) => set((d) => { d.about.leadership.team[i].name = v; })} />
               <Field label="Role" value={m.role} onChange={(v) => set((d) => { d.about.leadership.team[i].role = v; })} />
               <Field label="Bio" value={m.bio} onChange={(v) => set((d) => { d.about.leadership.team[i].bio = v; })} multiline rows={3} />
-              <Field label="Avatar URL" value={m.avatar} onChange={(v) => set((d) => { d.about.leadership.team[i].avatar = v; })} />
+              <ImageField label="Avatar" value={m.avatar} onChange={(v) => set((d) => { d.about.leadership.team[i].avatar = v; })} />
             </ArrayCard>
           ))}
         </Section>
@@ -232,6 +289,85 @@ export default function ContentEditor({
           <Field label="Heading" value={content.about.aboutCta.heading} onChange={(v) => set((d) => { d.about.aboutCta.heading = v; })} />
           <Field label="Subtitle" value={content.about.aboutCta.subtitle} onChange={(v) => set((d) => { d.about.aboutCta.subtitle = v; })} multiline rows={2} />
           <Field label="Button Text" value={content.about.aboutCta.cta} onChange={(v) => set((d) => { d.about.aboutCta.cta = v; })} />
+        </Section>
+      </div>
+
+      {/* ── CONTACT PAGE ── */}
+      <div className={styles.pageBlock}>
+        <h2 className={styles.pageBlockTitle}>📞 Contact Page</h2>
+        <Section title="Contact Hero">
+          <Field label="Title" value={content.contact.hero.title} onChange={(v) => set((d) => { d.contact.hero.title = v; })} />
+          <Field label="Subtitle" value={content.contact.hero.subtitle} onChange={(v) => set((d) => { d.contact.hero.subtitle = v; })} multiline rows={2} />
+        </Section>
+        <Section title="Contact Info">
+          <Field label="HQ Title" value={content.contact.info.hqTitle} onChange={(v) => set((d) => { d.contact.info.hqTitle = v; })} />
+          <Field label="HQ Address (\\n = new line)" value={content.contact.info.hqAddress} onChange={(v) => set((d) => { d.contact.info.hqAddress = v; })} multiline rows={3} />
+          <Field label="Email Label" value={content.contact.info.emailLabel} onChange={(v) => set((d) => { d.contact.info.emailLabel = v; })} />
+          <Field label="Email Address" value={content.contact.info.emailAddress} onChange={(v) => set((d) => { d.contact.info.emailAddress = v; })} />
+          <Field label="Phone Label" value={content.contact.info.phoneLabel} onChange={(v) => set((d) => { d.contact.info.phoneLabel = v; })} />
+          <Field label="Phone Number" value={content.contact.info.phoneNumber} onChange={(v) => set((d) => { d.contact.info.phoneNumber = v; })} />
+          <Field label="Programmes Label" value={content.contact.info.programmesLabel} onChange={(v) => set((d) => { d.contact.info.programmesLabel = v; })} />
+          <Field label="Programmes Text" value={content.contact.info.programmesText} onChange={(v) => set((d) => { d.contact.info.programmesText = v; })} />
+          <Field label="Programmes Link" value={content.contact.info.programmesLink} onChange={(v) => set((d) => { d.contact.info.programmesLink = v; })} />
+        </Section>
+      </div>
+
+      {/* ── IMPACT PAGE ── */}
+      <div className={styles.pageBlock}>
+        <h2 className={styles.pageBlockTitle}>🌍 Impact Page</h2>
+        <Section title="Impact Hero">
+          <Field label="Title" value={content.impact.hero.title} onChange={(v) => set((d) => { d.impact.hero.title = v; })} />
+          <Field label="Subtitle" value={content.impact.hero.subtitle} onChange={(v) => set((d) => { d.impact.hero.subtitle = v; })} multiline rows={2} />
+        </Section>
+        <Section title="Research & White Papers">
+          <Field label="Section Title" value={content.impact.research.title} onChange={(v) => set((d) => { d.impact.research.title = v; })} />
+          {content.impact.research.items.map((item, i) => (
+            <ArrayCard key={i} header={`Document ${i+1}: ${item.title}`}>
+              <Field label="Title" value={item.title} onChange={(v) => set((d) => { d.impact.research.items[i].title = v; })} />
+              <Field label="Date/Info" value={item.date} onChange={(v) => set((d) => { d.impact.research.items[i].date = v; })} />
+              <Field label="Button Text" value={item.buttonText} onChange={(v) => set((d) => { d.impact.research.items[i].buttonText = v; })} />
+              <Field label="Download URL / Link" value={item.url} onChange={(v) => set((d) => { d.impact.research.items[i].url = v; })} />
+            </ArrayCard>
+          ))}
+        </Section>
+        <Section title="Recent News">
+          <Field label="Section Title" value={content.impact.news.title} onChange={(v) => set((d) => { d.impact.news.title = v; })} />
+          {content.impact.news.items.map((item, i) => (
+            <ArrayCard key={i} header={`News ${i+1}: ${item.title}`}>
+              <Field label="Title" value={item.title} onChange={(v) => set((d) => { d.impact.news.items[i].title = v; })} />
+              <Field label="Excerpt" value={item.excerpt} onChange={(v) => set((d) => { d.impact.news.items[i].excerpt = v; })} multiline rows={2} />
+            </ArrayCard>
+          ))}
+        </Section>
+      </div>
+
+      {/* ── PILLARS PAGE ── */}
+      <div className={styles.pageBlock}>
+        <h2 className={styles.pageBlockTitle}>🏛️ Pillars Page</h2>
+        <Section title="Pillars Hero">
+          <Field label="Title" value={content.pillarsPage.hero.title} onChange={(v) => set((d) => { d.pillarsPage.hero.title = v; })} />
+          <Field label="Subtitle" value={content.pillarsPage.hero.subtitle} onChange={(v) => set((d) => { d.pillarsPage.hero.subtitle = v; })} multiline rows={2} />
+        </Section>
+        <Section title="Pillars Detailed List">
+          {content.pillarsPage.pillarsList.map((item, i) => (
+            <ArrayCard key={i} header={`Pillar ${i+1}: ${item.title}`}>
+              <Field label="ID (anchor link)" value={item.id} onChange={(v) => set((d) => { d.pillarsPage.pillarsList[i].id = v; })} />
+              <Field label="Title" value={item.title} onChange={(v) => set((d) => { d.pillarsPage.pillarsList[i].title = v; })} />
+              <Field label="Description" value={item.description} onChange={(v) => set((d) => { d.pillarsPage.pillarsList[i].description = v; })} multiline rows={3} />
+            </ArrayCard>
+          ))}
+        </Section>
+        <Section title="Projects Powered by CSCI AFRICA">
+          <Field label="Section Title" value={content.pillarsPage.projects.title} onChange={(v) => set((d) => { d.pillarsPage.projects.title = v; })} />
+          <Field label="Section Subtitle" value={content.pillarsPage.projects.subtitle} onChange={(v) => set((d) => { d.pillarsPage.projects.subtitle = v; })} multiline rows={2} />
+          {content.pillarsPage.projects.items.map((item, i) => (
+            <ArrayCard key={i} header={`Project ${i+1}: ${item.title}`}>
+              <Field label="Title" value={item.title} onChange={(v) => set((d) => { d.pillarsPage.projects.items[i].title = v; })} />
+              <Field label="Description" value={item.description} onChange={(v) => set((d) => { d.pillarsPage.projects.items[i].description = v; })} multiline rows={3} />
+              <Field label="Link Text (optional)" value={item.linkText} onChange={(v) => set((d) => { d.pillarsPage.projects.items[i].linkText = v; })} />
+              <Field label="Link URL (optional)" value={item.linkUrl} onChange={(v) => set((d) => { d.pillarsPage.projects.items[i].linkUrl = v; })} />
+            </ArrayCard>
+          ))}
         </Section>
       </div>
 

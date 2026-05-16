@@ -313,3 +313,45 @@ select.fieldInput { cursor: pointer; }
   .blogFormRow { grid-template-columns: 1fr; }
   .arrayRow { grid-template-columns: 1fr; }
 }
+
+/* ─── Image upload field ─── */
+.imageFieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.imagePreview {
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.imageFieldInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1.5px dashed #10B981;
+  background: rgba(16, 185, 129, 0.05);
+  color: #047857;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.uploadBtn:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-style: solid;
+}
