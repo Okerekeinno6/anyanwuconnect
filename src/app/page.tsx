@@ -5,13 +5,31 @@ import styles from './page.module.css';
 import HeroCarousel from '@/components/ui/HeroCarousel';
 import ScrollFadeIn from '@/components/ui/ScrollFadeIn';
 import { useEffect, useState } from 'react';
-import { getSiteContent, defaultContent, type SiteContent } from '@/lib/siteContent';
+import { getSiteContent, saveSiteContent, defaultContent, type SiteContent } from '@/lib/siteContent';
+import { apiGetContent, isBackendConfigured } from '@/lib/api';
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
 
   useEffect(() => {
-    setContent(getSiteContent());
+    async function loadContent() {
+      // Always try the backend first so admin edits show for all visitors
+      if (isBackendConfigured()) {
+        try {
+          const remote = await apiGetContent();
+          if (remote && Object.keys(remote).length > 0) {
+            const merged = remote as unknown as SiteContent;
+            setContent(merged);
+            saveSiteContent(merged); // keep localStorage in sync as cache
+            return;
+          }
+        } catch {
+          // fall through to localStorage
+        }
+      }
+      setContent(getSiteContent());
+    }
+    loadContent();
   }, []);
 
   const c = content;

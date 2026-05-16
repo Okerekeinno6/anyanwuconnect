@@ -2,16 +2,32 @@
 
 import Link from "next/link";
 import ScrollFadeIn from "@/components/ui/ScrollFadeIn";
-import { getSiteContent } from "@/lib/siteContent";
+import { getSiteContent, saveSiteContent, defaultContent, type SiteContent } from "@/lib/siteContent";
+import { apiGetContent, isBackendConfigured } from "@/lib/api";
 import { useEffect, useState } from "react";
-import { defaultContent, type SiteContent } from "@/lib/siteContent";
 import styles from "./about.module.css";
 
 export default function About() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
 
   useEffect(() => {
-    setContent(getSiteContent());
+    async function loadContent() {
+      if (isBackendConfigured()) {
+        try {
+          const remote = await apiGetContent();
+          if (remote && Object.keys(remote).length > 0) {
+            const merged = remote as unknown as SiteContent;
+            setContent(merged);
+            saveSiteContent(merged);
+            return;
+          }
+        } catch {
+          // fall through to localStorage
+        }
+      }
+      setContent(getSiteContent());
+    }
+    loadContent();
   }, []);
 
   const a = content.about;
