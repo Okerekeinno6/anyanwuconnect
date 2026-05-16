@@ -60,7 +60,12 @@ export default function AdminPage() {
       try {
         const remote = await apiGetContent();
         if (remote && Object.keys(remote).length > 0) {
-          setContent(remote as unknown as SiteContent);
+          // Save remote to localStorage then call getSiteContent() which
+          // deep-merges with defaultContent — so any NEW fields we added
+          // (contact, impact, pillarsPage) are never undefined even if
+          // the live database still has the old schema.
+          saveSiteContent(remote as unknown as SiteContent);
+          setContent(getSiteContent());
           return;
         }
       } catch { /* fall through to localStorage */ }
